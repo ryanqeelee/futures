@@ -1,0 +1,43 @@
+# 期权套利扫描工具 - 系统配置
+# Option Arbitrage Scanner - System Configuration
+
+# 数据源配置
+data_sources:
+  primary: "tushare"
+  fallback: []  # 备用数据源
+  
+  # Tushare配置
+  tushare:
+    token_env: "TUSHARE_TOKEN"
+    timeout: 30
+    retry_count: 3
+    retry_delay: 1
+
+# 缓存配置  
+cache:
+  enabled: true
+  ttl: 300  # 缓存有效期(秒)
+  max_size: 1000  # 最大缓存条目数
+  storage_path: "./storage/cache"
+
+# 日志配置
+logging:
+  level: "INFO"
+  file_path: "./storage/logs/system.log"
+  max_file_size: "10MB"
+  backup_count: 5
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# 系统性能配置
+performance:
+  max_concurrent_requests: 10
+  request_timeout: 30
+  batch_size: 100
+  
+# UI配置
+ui:
+  page_title: "期权套利扫描工具"
+  page_icon: "🚀"
+  layout: "wide"
+  theme: "light"
+  refresh_interval: 30  # 自动刷新间隔(秒)

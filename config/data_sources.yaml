@@ -1,0 +1,50 @@
+# Data source configurations
+# Configure different data providers with their specific parameters
+
+tushare:
+  type: "tushare"
+  enabled: true
+  priority: 1
+  timeout: 30
+  retry_count: 3
+  retry_delay: 1.0
+  rate_limit: 200  # requests per hour for basic plan
+  api_token: "${TUSHARE_TOKEN}"  # Will be loaded from environment
+  extra_params:
+    risk_free_rate: 0.03
+    max_days_back: 5
+
+wind:
+  type: "wind"
+  enabled: false  # Disabled by default as it requires Wind Terminal
+  priority: 2
+  timeout: 45
+  retry_count: 2
+  retry_delay: 2.0
+  base_url: "https://wind.com.cn/api"
+  extra_params:
+    use_terminal: true
+    terminal_timeout: 60
+
+eastmoney:
+  type: "eastmoney"
+  enabled: false  # Placeholder for future implementation
+  priority: 3
+  timeout: 20
+  retry_count: 3
+  retry_delay: 1.0
+  base_url: "https://api.eastmoney.com"
+  extra_params:
+    free_tier: true
+
+mock:
+  type: "mock"
+  enabled: false  # Only for testing
+  priority: 10
+  timeout: 1
+  retry_count: 1
+  retry_delay: 0.1
+  extra_params:
+    generate_random_data: true
+    seed: 42
+    option_count: 100

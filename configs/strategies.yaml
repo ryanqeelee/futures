@@ -1,0 +1,47 @@
+# 策略配置 - Strategy Configuration
+
+# 策略启用配置
+enabled_strategies:
+  - name: "pricing_arbitrage"
+    module: "src.strategies.pricing_arbitrage"
+    class: "PricingArbitrageStrategy"
+    priority: 1
+    enabled: true
+    
+  - name: "parity_arbitrage"  
+    module: "src.strategies.parity_arbitrage"
+    class: "ParityArbitrageStrategy"
+    priority: 2
+    enabled: true
+    
+  - name: "volatility_arbitrage"
+    module: "src.strategies.volatility_arbitrage" 
+    class: "VolatilityArbitrageStrategy"
+    priority: 3
+    enabled: false
+
+# 策略参数配置
+strategy_configs:
+  pricing_arbitrage:
+    profit_threshold: 0.02  # 最小利润阈值 2%
+    max_risk: 0.10         # 最大风险 10%
+    min_volume: 100        # 最小成交量
+    max_days_to_expiry: 30 # 最大到期天数
+    
+  parity_arbitrage:
+    profit_threshold: 0.015 # 最小利润阈值 1.5%
+    max_risk: 0.08         # 最大风险 8%
+    interest_rate: 0.03    # 无风险利率 3%
+    dividend_yield: 0.02   # 股息收益率 2%
+    
+  volatility_arbitrage:
+    profit_threshold: 0.03  # 最小利润阈值 3%
+    max_risk: 0.15         # 最大风险 15%
+    iv_threshold: 0.05     # 隐含波动率阈值差 5%
+    lookback_days: 30      # 历史波动率回望天数
+
+# 全局策略设置
+global_settings:
+  max_concurrent_strategies: 5
+  strategy_timeout: 60  # 策略执行超时(秒)
+  result_cache_ttl: 300 # 结果缓存时间(秒)

@@ -1,0 +1,95 @@
+# Main system configuration
+# This is the primary configuration file for the options arbitrage system
+
+# Application settings
+app_name: "Options Arbitrage Scanner"
+version: "1.0.0"
+environment: "development"  # development, staging, production
+debug: true
+log_level: "INFO"
+
+# Server settings (for future API server)
+host: "localhost"
+port: 8000
+workers: 1
+
+# Security (use environment variables in production)
+secret_key: "${SECRET_KEY:-your-secret-key-here-minimum-32-characters-long}"
+api_key: "${API_KEY}"
+
+# File paths
+data_dir: "./data"
+log_dir: "./logs" 
+config_dir: "./config"
+
+# Database configuration (optional, for future use)
+database:
+  url: "${DATABASE_URL:-sqlite:///./arbitrage.db}"
+  pool_size: 10
+  max_overflow: 20
+  pool_timeout: 30
+  echo: false
+
+# Cache configuration  
+cache:
+  enabled: true
+  backend: "memory"  # memory, redis, memcached
+  ttl_seconds: 300   # 5 minutes default TTL
+  max_size: 1000
+  redis_url: "${REDIS_URL}"
+
+# Risk management settings
+risk:
+  max_position_size: 100000.0      # Maximum $100K position size
+  max_daily_loss: 10000.0          # Maximum $10K daily loss
+  min_liquidity_volume: 100        # Minimum volume for liquidity
+  max_concentration: 0.3           # Maximum 30% concentration
+  max_days_to_expiry: 90           # Maximum 90 days to expiry
+  min_days_to_expiry: 1            # Minimum 1 day to expiry
+
+# Monitoring and alerting
+monitoring:
+  enabled: true
+  scan_interval: 60                # Scan every 60 seconds
+  alert_threshold: 0.05            # Alert on 5%+ opportunities
+  email_enabled: false
+  email_recipients: []
+  webhook_url: "${WEBHOOK_URL}"
+
+# Data source references (detailed configs in data_sources.yaml)
+data_sources:
+  tushare:
+    type: "tushare"
+    enabled: true
+    priority: 1
+  wind:
+    type: "wind" 
+    enabled: false
+    priority: 2
+  mock:
+    type: "mock"
+    enabled: false
+    priority: 10
+
+# Strategy references (detailed configs in strategies.yaml)  
+strategies:
+  pricing_arbitrage:
+    type: "pricing_arbitrage"
+    enabled: true
+    priority: 1
+  put_call_parity:
+    type: "put_call_parity"
+    enabled: true
+    priority: 2
+  volatility_arbitrage:
+    type: "volatility_arbitrage"
+    enabled: true  
+    priority: 3
+  calendar_spread:
+    type: "calendar_spread"
+    enabled: true
+    priority: 4
+  legacy_integration:
+    type: "pricing_arbitrage"
+    enabled: true
+    priority: 5

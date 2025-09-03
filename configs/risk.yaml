@@ -1,0 +1,43 @@
+# 风险配置 - Risk Configuration
+
+# 风险控制参数
+risk_limits:
+  max_single_position_risk: 0.20    # 单个头寸最大风险 20%
+  max_total_portfolio_risk: 0.50    # 总投资组合最大风险 50%
+  max_leverage: 3.0                 # 最大杠杆倍数
+  
+# 交易成本配置
+trading_costs:
+  commission_rate: 0.0003           # 佣金费率 0.03%
+  bid_ask_spread: 0.001             # 买卖价差 0.1%
+  slippage: 0.0005                  # 滑点 0.05%
+  
+# 风险评级标准
+risk_grades:
+  low:
+    max_risk: 0.05                  # 低风险: 最大5%
+    min_profit: 0.01                # 最小1%收益
+    score: "A"
+    
+  medium:
+    max_risk: 0.10                  # 中等风险: 最大10% 
+    min_profit: 0.02                # 最小2%收益
+    score: "B"
+    
+  high:
+    max_risk: 0.20                  # 高风险: 最大20%
+    min_profit: 0.05                # 最小5%收益
+    score: "C"
+
+# 止损设置
+stop_loss:
+  enabled: true
+  default_percentage: 0.10          # 默认止损比例 10%
+  trailing_stop: true               # 启用跟踪止损
+  trailing_percentage: 0.05         # 跟踪止损比例 5%
+
+# 风险监控
+monitoring:
+  real_time_check: true
+  alert_threshold: 0.80             # 风险预警阈值 80%
+  emergency_exit_threshold: 0.95    # 紧急退出阈值 95%

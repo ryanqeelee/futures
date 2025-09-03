@@ -1,0 +1,77 @@
+# Strategy configurations
+# Configure different arbitrage strategies with their parameters
+
+pricing_arbitrage:
+  type: "pricing_arbitrage"
+  enabled: true
+  priority: 1
+  min_profit_threshold: 0.05  # 5% minimum profit margin
+  max_risk_tolerance: 0.15    # 15% maximum risk
+  parameters:
+    min_liquidity_volume: 50       # Minimum volume for liquidity
+    max_days_to_expiry: 60         # Maximum 60 days to expiry
+    min_days_to_expiry: 3          # Minimum 3 days to expiry
+    min_price_deviation: 0.08      # 8% minimum price deviation
+    max_price_deviation: 0.5       # 50% maximum (sanity check)
+    require_theoretical_price: true
+    min_implied_volatility: 0.01   # 1% minimum IV
+    max_implied_volatility: 2.0    # 200% maximum IV
+
+put_call_parity:
+  type: "put_call_parity"
+  enabled: true
+  priority: 2
+  min_profit_threshold: 0.03  # 3% minimum profit margin
+  max_risk_tolerance: 0.1     # 10% maximum risk
+  parameters:
+    min_liquidity_volume: 100       # Higher volume requirement for combo trades
+    max_days_to_expiry: 90
+    min_days_to_expiry: 5
+    parity_tolerance: 0.05          # 5% tolerance for parity violations
+    require_same_expiry: true       # Require same expiry for call/put pairs
+    min_underlying_price: 10        # Minimum underlying price
+    max_spread_percentage: 0.1      # Maximum 10% bid-ask spread
+
+volatility_arbitrage:
+  type: "volatility_arbitrage"  
+  enabled: true
+  priority: 3
+  min_profit_threshold: 0.02  # 2% minimum profit margin
+  max_risk_tolerance: 0.2     # 20% maximum risk (vol strategies are riskier)
+  parameters:
+    min_liquidity_volume: 200       # Higher volume for vol strategies
+    max_days_to_expiry: 45
+    min_days_to_expiry: 7
+    iv_threshold: 0.1               # 10% IV threshold for anomaly detection
+    min_iv_zscore: 2.0             # 2 standard deviations for outliers
+    lookback_period: 20            # Days to look back for IV history
+    vol_surface_smoothing: true    # Enable volatility surface smoothing
+
+calendar_spread:
+  type: "calendar_spread"
+  enabled: true
+  priority: 4
+  min_profit_threshold: 0.02  # 2% minimum profit margin
+  max_risk_tolerance: 0.15    # 15% maximum risk
+  parameters:
+    min_liquidity_volume: 50
+    max_days_to_expiry: 120         # Longer for calendar spreads
+    min_days_to_expiry: 10
+    max_time_diff: 60               # Maximum 60 days between expiries
+    min_time_diff: 7                # Minimum 7 days between expiries  
+    same_strike_required: true      # Require same strike price
+    max_calendar_spread_width: 0.3  # Maximum 30% spread width
+
+legacy_integration:
+  type: "pricing_arbitrage"  # Legacy uses pricing arbitrage type
+  enabled: true
+  priority: 5  # Lower priority as backup
+  min_profit_threshold: 0.08  # 8% threshold for legacy (more conservative)
+  max_risk_tolerance: 0.1     # 10% maximum risk
+  parameters:
+    min_liquidity_volume: 100
+    max_days_to_expiry: 45
+    min_days_to_expiry: 5
+    use_legacy_algorithms: true     # Flag to use legacy code
+    legacy_deviation_threshold: 0.08
+    legacy_parity_tolerance: 0.03
