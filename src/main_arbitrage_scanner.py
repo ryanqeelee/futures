@@ -53,7 +53,7 @@ from src.utils.performance_monitor import PerformanceMonitor
 # Import enhanced pricing engine
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
-from enhanced_pricing_engine import (
+from src.engine.enhanced_pricing_engine import (
     VectorizedOptionPricer, ArbitrageDetector,
     EnhancedBlackScholesEngine, RobustImpliedVolatility
 )

@@ -51,7 +51,7 @@ from src.core.exceptions import (
 )
 
 # Import enhanced pricing engine
-from enhanced_pricing_engine import (
+from .enhanced_pricing_engine import (
     VectorizedOptionPricer, ArbitrageDetector,
     EnhancedBlackScholesEngine, RobustImpliedVolatility
 )

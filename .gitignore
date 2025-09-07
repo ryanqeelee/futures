@@ -207,3 +207,43 @@ docs/build/
 models/
 output/
 results/
+
+# Development files and archives
+archive/
+*_validator.py
+*_benchmark.py
+*_assessment.py
+demo_*.py
+test_*.py
+validate_*.py
+*_validation.py
+*_integration.py
+simple_*.py
+enhanced_*.py
+ultra_*.py
+comprehensive_*.py
+integration_*.py
+
+# Development documentation
+*_SUMMARY.md
+*_REPORT.md
+*_GUIDE.md
+*_IMPLEMENTATION.md
+STAGE*.md
+阶段*.md
+*_analysis*.md
+*_architecture*.md
+ENHANCED_*.md
+PERFORMANCE_*.md
+EXCEPTION_*.md
+MOCK_*.md
+CACHE_*.md
+INTERFACE_*.md
+TASK_*.md
+QUANT_*.md
+
+# Development output files
+*_report.json
+*_results.json
+*_charts.png
+*_comparison*.png
