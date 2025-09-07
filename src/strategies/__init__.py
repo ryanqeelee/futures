@@ -11,6 +11,7 @@ from .base import (
 )
 from .pricing_arbitrage import PricingArbitrageStrategy, PricingArbitrageParameters
 from .legacy_integration import LegacyIntegrationStrategy
+from .prediction_based_strategy import PredictionBasedStrategy, PredictionBasedParameters
 
 # Import Chinese strategy files to ensure registration
 try:
@@ -39,7 +40,8 @@ __all__ = [
     
     # Strategy implementations
     'PricingArbitrageStrategy', 'PricingArbitrageParameters',
-    'LegacyIntegrationStrategy'
+    'LegacyIntegrationStrategy',
+    'PredictionBasedStrategy', 'PredictionBasedParameters'
 ]
 
 # Add Chinese strategies to exports if available

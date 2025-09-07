@@ -36,6 +36,7 @@ from .components.config_panel import ConfigPanel
 from .components.progress_monitor import ProgressMonitor
 from .components.results_display import ResultsDisplay
 from .components.enhanced_results_display import EnhancedResultsDisplay
+from .components.enhanced_strategy_config import EnhancedStrategyConfigPanel
 from .components.data_visualization import DataVisualization
 from .components.data_filters import AdvancedDataFilters
 from .utils.export_utils import ExportUtils
@@ -61,6 +62,7 @@ class TradingSystemUI:
         
         # UI组件
         self.config_panel = ConfigPanel()
+        self.enhanced_strategy_config = EnhancedStrategyConfigPanel()
         self.progress_monitor = ProgressMonitor()
         self.results_display = ResultsDisplay()
         self.enhanced_results_display = EnhancedResultsDisplay()
@@ -372,80 +374,44 @@ class TradingSystemUI:
             st.warning("请先初始化系统")
             return
         
-        # 策略选择
-        with st.expander("🎲 策略选择", expanded=True):
-            st.write("选择要使用的套利策略：")
-            
-            # 策略选项映射
-            strategy_options = {
-                "定价套利": StrategyType.PRICING_ARBITRAGE,
-                "看跌看涨平价": StrategyType.PUT_CALL_PARITY,
-                "波动率套利": StrategyType.VOLATILITY_ARBITRAGE,
-                "日历价差": StrategyType.CALENDAR_SPREAD
-            }
-            
-            col1, col2 = st.columns(2)
-            
-            selected_strategies = []
-            with col1:
-                if st.checkbox("定价套利", value=True, help="基于Black-Scholes模型的理论价格与市场价格偏差"):
-                    selected_strategies.append(StrategyType.PRICING_ARBITRAGE)
-                if st.checkbox("看跌看涨平价", value=True, help="基于期权平价关系的套利机会"):
-                    selected_strategies.append(StrategyType.PUT_CALL_PARITY)
-            
-            with col2:
-                if st.checkbox("波动率套利", value=False, help="基于隐含波动率与历史波动率偏差"):
-                    selected_strategies.append(StrategyType.VOLATILITY_ARBITRAGE)
-                if st.checkbox("日历价差", value=False, help="不同到期日期权的价差套利"):
-                    selected_strategies.append(StrategyType.CALENDAR_SPREAD)
-            
-            # 显示已选择的策略
-            if selected_strategies:
-                st.success(f"已选择 {len(selected_strategies)} 个策略")
-            else:
-                st.warning("请至少选择一个策略")
+        # 使用增强的策略配置面板
+        selected_strategies, strategy_configs = self.enhanced_strategy_config.render()
         
-        # 扫描参数
-        with st.expander("📋 扫描参数", expanded=False):
-            min_profit = st.slider(
-                "最小利润阈值 (%)",
-                min_value=0.1,
-                max_value=10.0,
-                value=1.0,
-                step=0.1
-            )
-            
-            max_risk = st.slider(
-                "最大风险容忍度 (%)",
-                min_value=1.0,
-                max_value=20.0,
-                value=10.0,
-                step=1.0
-            )
-            
-            max_results = st.number_input(
-                "最大结果数量",
-                min_value=10,
-                max_value=1000,
-                value=100,
-                step=10
-            )
+        # 显示全局扫描参数
+        if selected_strategies:
+            with st.expander("📋 全局扫描参数", expanded=False):
+                max_results = st.number_input(
+                    "最大结果数量",
+                    min_value=10,
+                    max_value=1000,
+                    value=100,
+                    step=10,
+                    help="限制扫描返回的最大机会数量"
+                )
+                
+                enable_parallel = st.checkbox(
+                    "启用并行扫描",
+                    value=True,
+                    help="使用多线程并行扫描提升速度"
+                )
         
         # 一键扫描按钮
         scan_disabled = st.session_state.system_status == 'scanning' or not selected_strategies
         
-        if st.button(
-            "🚀 一键扫描套利机会", 
-            disabled=scan_disabled,
-            width='stretch'
-        ):
-            # 开始扫描
-            asyncio.run(self._run_arbitrage_scan(
-                min_profit_threshold=min_profit / 100,
-                max_risk_tolerance=max_risk / 100,
-                max_results=max_results,
-                strategy_types=selected_strategies
-            ))
+        if selected_strategies:
+            if st.button(
+                "🚀 一键扫描套利机会", 
+                disabled=scan_disabled,
+                width='stretch'
+            ):
+                # 开始扫描
+                asyncio.run(self._run_arbitrage_scan_with_configs(
+                    strategy_configs=strategy_configs,
+                    max_results=max_results if 'max_results' in locals() else 100,
+                    enable_parallel=enable_parallel if 'enable_parallel' in locals() else True
+                ))
+        else:
+            st.info("请先选择至少一个策略")
     
     def _render_system_info(self):
         """渲染系统信息"""
@@ -901,6 +867,147 @@ class TradingSystemUI:
             if export_datasets:
                 self.export_utils.create_batch_export_interface(export_datasets)
     
+    async def _run_arbitrage_scan_with_configs(
+        self,
+        strategy_configs: Dict[StrategyType, Dict[str, Any]],
+        max_results: int = 100,
+        enable_parallel: bool = True
+    ):
+        """
+        使用策略配置执行套利扫描
+        
+        Args:
+            strategy_configs: 策略配置字典
+            max_results: 最大结果数量
+            enable_parallel: 是否启用并行扫描
+        """
+        # 检查系统状态
+        if st.session_state.system_status != 'ready':
+            st.error("系统未初始化")
+            return
+        
+        # 检查组件是否可用
+        if not hasattr(self, 'arbitrage_engine') or not self.arbitrage_engine:
+            st.error("系统组件未加载，请刷新页面")
+            return
+        
+        try:
+            st.session_state.system_status = 'scanning'
+            
+            # 显示进度
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            with status_text:
+                st.info("🔍 正在使用增强配置扫描套利机会...")
+            
+            # 创建扫描参数（使用策略配置中的最保守值作为全局参数）
+            global_min_profit = min(
+                config.get('min_profit_threshold', 0.02) 
+                for config in strategy_configs.values()
+            )
+            global_max_risk = max(
+                config.get('max_risk_tolerance', 0.1) 
+                for config in strategy_configs.values()
+            )
+            
+            scan_params = ScanParameters(
+                min_profit_threshold=global_min_profit,
+                max_risk_tolerance=global_max_risk,
+                max_results=max_results,
+                include_greeks=True,
+                include_iv=True,
+                strategy_types=list(strategy_configs.keys()),
+                strategy_configs=strategy_configs  # 传递策略配置
+            )
+            
+            # 模拟进度更新
+            for i in range(0, 101, 20):
+                progress_bar.progress(i)
+                await asyncio.sleep(0.1)
+            
+            # 执行扫描
+            start_time = time.time()
+            opportunities = await self.arbitrage_engine.scan_opportunities(scan_params)
+            scan_time = time.time() - start_time
+            
+            # 更新结果
+            results = []
+            for opp in opportunities:
+                result_data = {
+                    'id': opp.id,
+                    'strategy_type': opp.strategy_type.value,
+                    'profit_margin': opp.profit_margin,
+                    'expected_profit': opp.expected_profit,
+                    'risk_score': opp.risk_score,
+                    'confidence_score': opp.confidence_score,
+                    'instruments': ', '.join(opp.instruments),
+                    'underlying': opp.underlying,
+                    'timestamp': opp.timestamp,
+                    'max_loss': opp.max_loss,
+                    'days_to_expiry': opp.days_to_expiry
+                }
+                
+                # 添加策略特定信息
+                if hasattr(opp, 'parameters'):
+                    result_data.update({
+                        'prediction_confidence': opp.parameters.get('prediction_confidence', None),
+                        'option_strategy': opp.parameters.get('option_strategy', None),
+                        'greeks': opp.parameters.get('greeks', {}),
+                        'breakeven_points': opp.parameters.get('breakeven_points', [])
+                    })
+                
+                results.append(result_data)
+            
+            st.session_state.scan_results = results
+            
+            # 添加到历史记录
+            scan_history_entry = {
+                'timestamp': datetime.now(),
+                'scan_time': scan_time,
+                'opportunities_found': len(results),
+                'strategies_used': list(strategy_configs.keys()),
+                'config_summary': {
+                    'total_strategies': len(strategy_configs),
+                    'parallel_enabled': enable_parallel,
+                    'max_results': max_results
+                }
+            }
+            st.session_state.scan_history.append(scan_history_entry)
+            
+            # 更新状态
+            st.session_state.system_status = 'ready'
+            
+            # 清除进度显示
+            progress_bar.empty()
+            
+            with status_text:
+                st.success(f"✅ 增强扫描完成！发现 {len(results)} 个套利机会，用时 {scan_time:.2f}s")
+                
+                # 显示策略分布统计
+                if results:
+                    strategy_counts = {}
+                    for result in results:
+                        strategy = result['strategy_type']
+                        strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
+                    
+                    st.write("**策略分布**:")
+                    cols = st.columns(len(strategy_counts))
+                    for i, (strategy, count) in enumerate(strategy_counts.items()):
+                        strategy_name = self.enhanced_strategy_config._get_strategy_display_name(
+                            StrategyType(strategy)
+                        )
+                        cols[i].metric(strategy_name, count)
+            
+            # 强制刷新页面以显示新结果
+            st.rerun()
+            
+        except Exception as e:
+            self.logger.error(f"增强扫描失败: {e}", exc_info=True)
+            st.session_state.system_status = 'ready'
+            st.session_state.error_messages.append(f"扫描失败: {str(e)}")
+            st.error(f"❌ 扫描失败: {str(e)}")
+
     async def _run_arbitrage_scan(
         self,
         min_profit_threshold: float = 0.01,

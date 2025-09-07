@@ -70,6 +70,7 @@ class ScanParameters:
     include_greeks: bool = True
     include_iv: bool = True
     max_results: int = 1000
+    strategy_configs: Optional[Dict[StrategyType, Dict[str, Any]]] = None
 
 
 @dataclass
@@ -579,12 +580,36 @@ class ArbitrageEngine:
         try:
             start_time = time.time()
             
+            # Get strategy-specific configuration if available
+            strategy_instance = strategy
+            if scan_params.strategy_configs and strategy.strategy_type in scan_params.strategy_configs:
+                strategy_config = scan_params.strategy_configs[strategy.strategy_type]
+                
+                # Create new StrategyParameters with base parameters and strategy-specific config
+                base_params = {
+                    'min_profit_threshold': scan_params.min_profit_threshold,
+                    'max_risk_tolerance': scan_params.max_risk_tolerance,
+                    'min_liquidity_volume': scan_params.min_liquidity_volume,
+                    'max_days_to_expiry': scan_params.max_days_to_expiry,
+                    'min_days_to_expiry': scan_params.min_days_to_expiry
+                }
+                
+                # Merge strategy-specific configuration
+                merged_params = {**base_params, **strategy_config}
+                custom_parameters = StrategyParameters(**merged_params)
+                
+                # Create new strategy instance with custom parameters
+                strategy_instance = StrategyRegistry.create_strategy(
+                    strategy.strategy_type, 
+                    custom_parameters
+                )
+            
             # Filter data based on strategy parameters
-            filtered_data = strategy.filter_options(market_data)
+            filtered_data = strategy_instance.filter_options(market_data)
             
             if not filtered_data:
                 return StrategyResult(
-                    strategy_name=strategy.name,
+                    strategy_name=strategy_instance.name,
                     opportunities=[],
                     execution_time=time.time() - start_time,
                     data_timestamp=datetime.now(),
@@ -592,14 +617,14 @@ class ArbitrageEngine:
                 )
             
             # Execute strategy
-            result = strategy.scan_opportunities(filtered_data)
+            result = strategy_instance.scan_opportunities(filtered_data)
             
             # Validate and enhance opportunities
             validated_opportunities = []
             for opportunity in result.opportunities:
-                if strategy.validate_opportunity(opportunity):
+                if strategy_instance.validate_opportunity(opportunity):
                     # Calculate confidence score
-                    confidence = strategy.calculate_confidence_score(opportunity)
+                    confidence = strategy_instance.calculate_confidence_score(opportunity)
                     opportunity.confidence_score = confidence
                     validated_opportunities.append(opportunity)
             

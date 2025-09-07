@@ -33,6 +33,7 @@ class StrategyType(str, Enum):
     PUT_CALL_PARITY = "put_call_parity"
     VOLATILITY_ARBITRAGE = "volatility_arbitrage"
     CALENDAR_SPREAD = "calendar_spread"
+    PREDICTION_BASED = "prediction_based"  # 新增：基于价格预测的期权交易策略
 
 
 class DatabaseConfig(BaseModel):
@@ -96,6 +97,40 @@ class RiskConfig(BaseModel):
         return v
 
 
+class ParameterConstraint(BaseModel):
+    """Parameter constraint definition."""
+    model_config = ConfigDict(extra='forbid')
+    
+    min_value: Optional[float] = Field(None, description="Minimum allowed value")
+    max_value: Optional[float] = Field(None, description="Maximum allowed value") 
+    step: Optional[float] = Field(None, description="Step increment")
+    choices: Optional[List[Any]] = Field(None, description="Valid choices")
+    required: bool = Field(True, description="Whether parameter is required")
+    
+
+class ParameterDefinition(BaseModel):
+    """Strategy parameter definition with metadata."""
+    model_config = ConfigDict(extra='forbid')
+    
+    name: str = Field(..., description="Parameter name")
+    display_name: str = Field(..., description="User-friendly display name")
+    description: str = Field(..., description="Parameter description")
+    parameter_type: str = Field(..., pattern="^(float|int|bool|str|choice)$", description="Parameter data type")
+    default_value: Any = Field(..., description="Default parameter value")
+    constraint: Optional[ParameterConstraint] = Field(None, description="Parameter constraints")
+    category: str = Field("general", description="Parameter category")
+    advanced: bool = Field(False, description="Whether this is an advanced parameter")
+
+
+class StrategyParameterSet(BaseModel):
+    """Complete parameter set for a strategy."""
+    model_config = ConfigDict(extra='forbid')
+    
+    strategy_type: StrategyType = Field(..., description="Strategy type")
+    parameter_definitions: List[ParameterDefinition] = Field(..., description="Parameter definitions")
+    preset_configs: Dict[str, Dict[str, Any]] = Field(default_factory=dict, description="Preset configurations")
+
+
 class StrategyConfig(BaseModel):
     """Strategy configuration."""
     model_config = ConfigDict(extra='forbid')
@@ -110,6 +145,11 @@ class StrategyConfig(BaseModel):
     
     # Strategy-specific parameters
     parameters: Dict[str, Any] = Field(default_factory=dict, description="Strategy parameters")
+    
+    # Configuration metadata
+    preset_name: Optional[str] = Field(None, description="Name of preset configuration used")
+    custom_config: bool = Field(False, description="Whether this is a custom configuration")
+    last_modified: datetime = Field(default_factory=datetime.now, description="Last modification timestamp")
 
 
 class MonitoringConfig(BaseModel):

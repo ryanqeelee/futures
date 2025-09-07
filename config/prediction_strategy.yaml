@@ -1,0 +1,219 @@
+# 基于价格预测的期权交易策略配置
+prediction_based_strategy:
+  enabled: true
+  priority: 2  # 优先级（1最高）
+  
+  # 基本参数
+  min_profit_threshold: 0.02  # 最小利润阈值 2%
+  max_risk_tolerance: 0.15    # 最大风险容忍度 15%
+  min_liquidity_volume: 50    # 最小流动性要求
+  
+  # 预测相关参数
+  min_prediction_confidence: 0.65  # 最小预测置信度 65%
+  max_time_to_expiry: 45          # 最大到期时间 45天
+  min_time_to_expiry: 7           # 最小到期时间 7天
+  
+  # 风险管理参数
+  max_single_position_risk: 0.025  # 单笔最大风险 2.5%
+  max_delta_exposure: 0.3         # 最大Delta敞口 30%
+  max_vega_exposure: 0.2          # 最大Vega敞口 20%
+  max_theta_exposure: -0.1        # 最大Theta敞口
+  
+  # 期权选择参数
+  preferred_moneyness_range: [0.85, 1.15]  # 偏好的价值程度范围
+  min_open_interest: 100                   # 最小持仓量
+  max_bid_ask_spread: 0.06                # 最大买卖价差 6%
+  
+  # 策略类型启用
+  enable_directional_strategies: true   # 启用方向性策略
+  enable_volatility_strategies: true    # 启用波动率策略
+  enable_spread_strategies: true        # 启用价差策略
+  
+  # 预测模型配置
+  prediction_model:
+    type: "ensemble"  # 集成模型
+    models:
+      - name: "random_forest"
+        weight: 0.4
+        parameters:
+          n_estimators: 100
+          max_depth: 10
+          min_samples_split: 5
+      - name: "xgboost"
+        weight: 0.4  
+        parameters:
+          n_estimators: 100
+          learning_rate: 0.1
+          max_depth: 6
+      - name: "linear_regression"
+        weight: 0.2
+        parameters:
+          fit_intercept: true
+    
+    # 特征工程
+    features:
+      technical_indicators:
+        - sma_5
+        - sma_10  
+        - sma_20
+        - ema_12
+        - ema_26
+        - rsi_14
+        - macd
+        - bb_upper
+        - bb_middle
+        - bb_lower
+        - atr_14
+      
+      price_features:
+        - close
+        - high
+        - low
+        - volume
+        - open_interest
+      
+      momentum_features:
+        - price_change_1d
+        - price_change_5d
+        - price_change_10d
+        - volatility_5d
+        - volatility_20d
+      
+      market_structure:
+        - support_level
+        - resistance_level
+        - trend_strength
+    
+    # 模型训练参数
+    training:
+      lookback_days: 252        # 训练数据回看天数（1年）
+      prediction_horizon: 15    # 预测时间窗口（天）
+      retrain_interval: 30      # 重训练间隔（天）
+      validation_split: 0.2     # 验证集比例
+      min_training_samples: 100 # 最小训练样本数
+    
+    # 模型评估指标
+    evaluation_metrics:
+      - accuracy
+      - precision  
+      - recall
+      - f1_score
+      - auc_roc
+      - sharpe_ratio
+  
+  # 期权策略配置
+  option_strategies:
+    long_call:
+      enabled: true
+      min_confidence: 0.7    # 看涨信号最小置信度
+      max_risk_per_trade: 0.02
+      preferred_delta_range: [0.4, 0.7]
+    
+    long_put:
+      enabled: true
+      min_confidence: 0.7    # 看跌信号最小置信度
+      max_risk_per_trade: 0.02
+      preferred_delta_range: [-0.7, -0.4]
+    
+    bull_call_spread:
+      enabled: true
+      min_confidence: 0.65
+      max_risk_per_trade: 0.015
+      max_spread_width: 0.1   # 最大价差宽度（相对于标的价格）
+    
+    bear_put_spread:
+      enabled: true
+      min_confidence: 0.65
+      max_risk_per_trade: 0.015
+      max_spread_width: 0.1
+    
+    straddle:
+      enabled: true
+      min_confidence: 0.6     # 高波动预测置信度
+      min_volatility_forecast: 0.3
+      max_risk_per_trade: 0.03
+    
+    iron_condor:
+      enabled: true
+      min_confidence: 0.7     # 低波动预测置信度
+      max_volatility_forecast: 0.2
+      max_risk_per_trade: 0.02
+      min_net_credit: 0.005   # 最小净收益
+  
+  # 品种特定配置
+  underlying_specific:
+    # 股指期货期权
+    "IF": 
+      min_confidence: 0.7
+      max_position_size: 0.05
+      preferred_strategies: ["long_call", "long_put", "bull_call_spread"]
+      
+    "IC":
+      min_confidence: 0.7  
+      max_position_size: 0.05
+      preferred_strategies: ["long_call", "long_put", "bear_put_spread"]
+      
+    "IH":
+      min_confidence: 0.65
+      max_position_size: 0.04
+      preferred_strategies: ["straddle", "iron_condor"]
+    
+    # 商品期货期权
+    "CU":  # 铜
+      min_confidence: 0.65
+      max_position_size: 0.03
+      preferred_strategies: ["bull_call_spread", "bear_put_spread"]
+      volatility_adjustment: 1.2  # 波动率调整因子
+      
+    "AU":  # 黄金
+      min_confidence: 0.7
+      max_position_size: 0.04
+      preferred_strategies: ["long_call", "long_put"]
+      volatility_adjustment: 1.0
+  
+  # 风险控制规则
+  risk_management:
+    # 组合风险限制
+    max_total_delta: 0.5        # 组合最大Delta敞口
+    max_total_vega: 0.3         # 组合最大Vega敞口
+    max_total_theta: -0.2       # 组合最大Theta敞口
+    max_correlation_exposure: 0.6  # 最大相关性敞口
+    
+    # 动态风险调整
+    volatility_regime_adjustment: true
+    market_stress_reduction: true
+    correlation_spike_protection: true
+    
+    # 止损规则
+    individual_stop_loss: 0.5    # 个体头寸止损 50%
+    portfolio_stop_loss: 0.2     # 组合止损 20%
+    time_based_stop_loss: 0.8    # 时间止损（距离到期）
+    
+    # 动态仓位管理
+    kelly_criterion: true        # 使用Kelly公式优化仓位
+    confidence_based_sizing: true # 基于置信度调整仓位大小
+    volatility_scaling: true     # 波动率调整仓位
+  
+  # 监控和警告
+  monitoring:
+    real_time_pnl: true          # 实时损益监控
+    greek_exposure_alerts: true   # 希腊字母敞口警告
+    prediction_accuracy_tracking: true  # 预测准确性跟踪
+    
+    alert_thresholds:
+      delta_exposure: 0.8        # Delta敞口警告阈值
+      vega_exposure: 0.8         # Vega敞口警告阈值  
+      daily_loss: 0.05           # 日损失警告阈值
+      prediction_accuracy: 0.5   # 预测准确性警告阈值
+  
+  # 性能优化
+  performance:
+    parallel_prediction: true    # 并行预测计算
+    cache_predictions: true      # 缓存预测结果
+    batch_option_evaluation: true  # 批量期权评估
+    vectorized_greeks: true      # 向量化希腊字母计算
+    
+    cache_settings:
+      prediction_ttl: 300        # 预测结果缓存时间（秒）
+      market_data_ttl: 60        # 市场数据缓存时间（秒）
+      model_cache_size: 100      # 模型缓存大小（MB）
