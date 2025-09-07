@@ -26,7 +26,7 @@ try:
         MainArbitrageScanner, ScanConfiguration, LegacyAlgorithmIntegrator,
         create_scanner, run_scan
     )
-    from config.models import StrategyType, RiskLevel
+    from config.models import StrategyType
     print("✅ Successfully imported integrated system components")
 except ImportError as e:
     print(f"❌ Import failed: {e}")

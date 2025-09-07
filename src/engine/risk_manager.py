@@ -22,6 +22,12 @@ import logging
 from ..config.models import ArbitrageOpportunity, RiskConfig
 from ..strategies.base import RiskMetrics, RiskLevel, OptionData
 
+# Import unified exception framework
+from src.core.exceptions import (
+    TradingSystemError, RiskError, SystemError,
+    error_handler, create_error_context
+)
+
 
 @dataclass
 class VaRResult:
@@ -152,8 +158,16 @@ class AdvancedRiskManager:
             )
             
         except Exception as e:
-            self.logger.error(f"VaR calculation failed: {e}")
-            return VaRResult(0, 0, 0, confidence_level, method, datetime.now())
+            context = create_error_context(
+                component="risk_manager",
+                operation="calculate_var",
+                method=method,
+                confidence_level=confidence_level,
+                returns_length=len(returns)
+            )
+            error_msg = f"VaR calculation failed: {e}"
+            self.logger.error(error_msg)
+            raise RiskError(error_msg, "var_calculation", context) from e
     
     def _historical_var(self, returns: np.ndarray, confidence_level: float) -> float:
         """Calculate historical VaR."""
@@ -256,8 +270,14 @@ class AdvancedRiskManager:
             )
             
         except Exception as e:
-            self.logger.error(f"Drawdown calculation failed: {e}")
-            return DrawdownResult(0, 0, datetime.now(), datetime.now(), None, 0)
+            context = create_error_context(
+                component="risk_manager",
+                operation="calculate_maximum_drawdown",
+                prices_length=len(prices)
+            )
+            error_msg = f"Drawdown calculation failed: {e}"
+            self.logger.error(error_msg)
+            raise RiskError(error_msg, "drawdown_calculation", context) from e
     
     def calculate_sharpe_ratio(
         self, 
@@ -299,8 +319,14 @@ class AdvancedRiskManager:
             )
             
         except Exception as e:
-            self.logger.error(f"Sharpe ratio calculation failed: {e}")
-            return SharpeRatioResult(0, 0, 0, risk_free_rate, len(returns))
+            context = create_error_context(
+                component="risk_manager",
+                operation="calculate_sharpe_ratio",
+                returns_length=len(returns)
+            )
+            error_msg = f"Sharpe ratio calculation failed: {e}"
+            self.logger.error(error_msg)
+            raise RiskError(error_msg, "sharpe_ratio_calculation", context) from e
     
     def detect_anomalies_zscore(
         self, 
@@ -336,8 +362,14 @@ class AdvancedRiskManager:
             return [(idx, z_scores[idx]) for idx in anomaly_indices]
             
         except Exception as e:
-            self.logger.error(f"Anomaly detection failed: {e}")
-            return []
+            context = create_error_context(
+                component="risk_manager",
+                operation="detect_anomalies_zscore",
+                values_length=len(values)
+            )
+            error_msg = f"Anomaly detection failed: {e}"
+            self.logger.error(error_msg)
+            raise RiskError(error_msg, "anomaly_detection", context) from e
     
     def assess_portfolio_risk(
         self, 
@@ -413,21 +445,14 @@ class AdvancedRiskManager:
             )
             
         except Exception as e:
-            self.logger.error(f"Portfolio risk assessment failed: {e}")
-            
-            # Return default metrics
-            return PortfolioRiskMetrics(
-                total_exposure=0,
-                concentration_risk=1.0,
-                correlation_risk=0.5,
-                liquidity_risk=0.5,
-                time_decay_risk=0.5,
-                var_metrics=VaRResult(0, 0, 0, 0.95, 'historical', datetime.now()),
-                drawdown_metrics=DrawdownResult(0, 0, datetime.now(), datetime.now(), None, 0),
-                sharpe_metrics=None,
-                overall_risk_score=1.0,
-                risk_level=RiskLevel.CRITICAL
+            context = create_error_context(
+                component="risk_manager",
+                operation="assess_portfolio_risk",
+                opportunities_count=len(opportunities)
             )
+            error_msg = f"Portfolio risk assessment failed: {e}"
+            self.logger.error(error_msg)
+            raise RiskError(error_msg, "portfolio_risk_assessment", context) from e
     
     def _calculate_concentration_risk(self, opportunities: List[ArbitrageOpportunity]) -> float:
         """Calculate concentration risk in the portfolio."""
@@ -588,8 +613,14 @@ class AdvancedRiskManager:
             return max(0, suggested_position)
             
         except Exception as e:
-            self.logger.error(f"Position size calculation failed: {e}")
-            return 0.0
+            context = create_error_context(
+                component="risk_manager",
+                operation="calculate_position_size",
+                opportunity_id=getattr(opportunity, 'id', 'unknown')
+            )
+            error_msg = f"Position size calculation failed: {e}"
+            self.logger.error(error_msg)
+            raise RiskError(error_msg, "position_sizing", context) from e
     
     def validate_risk_limits(
         self, 
@@ -638,5 +669,11 @@ class AdvancedRiskManager:
             return len(violations) == 0, violations
             
         except Exception as e:
-            self.logger.error(f"Risk validation failed: {e}")
-            return False, [f"Risk validation error: {e}"]
+            context = create_error_context(
+                component="risk_manager",
+                operation="validate_risk_limits",
+                opportunities_count=len(opportunities)
+            )
+            error_msg = f"Risk validation failed: {e}"
+            self.logger.error(error_msg)
+            raise RiskError(error_msg, "risk_validation", context) from e

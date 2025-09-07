@@ -37,14 +37,6 @@ eastmoney:
   extra_params:
     free_tier: true
 
-mock:
-  type: "mock"
-  enabled: false  # Only for testing
-  priority: 10
-  timeout: 1
-  retry_count: 1
-  retry_delay: 0.1
-  extra_params:
-    generate_random_data: true
-    seed: 42
+# mock data source configuration removed for production security
+# All data must come from real market APIs
     option_count: 100

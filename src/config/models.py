@@ -24,7 +24,7 @@ class DataSourceType(str, Enum):
     TUSHARE = "tushare"
     WIND = "wind"
     EASTMONEY = "eastmoney"
-    MOCK = "mock"
+    # MOCK data source removed for production security
 
 
 class StrategyType(str, Enum):

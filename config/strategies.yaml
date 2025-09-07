@@ -49,7 +49,7 @@ volatility_arbitrage:
 
 calendar_spread:
   type: "calendar_spread"
-  enabled: true
+  enabled: false
   priority: 4
   min_profit_threshold: 0.02  # 2% minimum profit margin
   max_risk_tolerance: 0.15    # 15% maximum risk

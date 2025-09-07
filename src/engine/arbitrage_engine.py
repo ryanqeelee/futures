@@ -39,11 +39,18 @@ from ..strategies.base import (
 from ..adapters.base import BaseDataAdapter, DataRequest, DataResponse
 from ..config.manager import ConfigManager
 
-
-# Import enhanced pricing engine
+# Import unified exception framework
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.parent))
+from src.core.exceptions import (
+    TradingSystemError, DataSourceError, ArbitrageError,
+    PricingError, RiskError, SystemError, ConfigurationError,
+    error_handler, async_error_handler, create_error_context,
+    handle_data_source_error
+)
+
+# Import enhanced pricing engine
 from enhanced_pricing_engine import (
     VectorizedOptionPricer, ArbitrageDetector,
     EnhancedBlackScholesEngine, RobustImpliedVolatility
@@ -250,7 +257,15 @@ class ArbitrageEngine:
                 self.logger.info(f"Initialized strategy: {strategy}")
                 
             except Exception as e:
-                self.logger.error(f"Failed to initialize strategy {strategy_name}: {e}")
+                context = create_error_context(
+                    component="arbitrage_engine",
+                    operation="initialize_strategy",
+                    strategy_name=strategy_name,
+                    strategy_type=config.type.value if hasattr(config.type, 'value') else str(config.type)
+                )
+                error_msg = f"Failed to initialize strategy {strategy_name}: {e}"
+                self.logger.error(error_msg)
+                raise ConfigurationError(error_msg, f"strategy.{strategy_name}", context) from e
     
     async def scan_opportunities(
         self, 
@@ -305,8 +320,14 @@ class ArbitrageEngine:
             return ranked_opportunities
             
         except Exception as e:
-            self.logger.error(f"Error during opportunity scan: {e}", exc_info=True)
-            return []
+            context = create_error_context(
+                component="arbitrage_engine",
+                operation="scan_opportunities",
+                scan_params=scan_params.to_dict() if hasattr(scan_params, 'to_dict') else str(scan_params)
+            )
+            error_msg = f"Error during opportunity scan: {e}"
+            self.logger.error(error_msg, exc_info=True)
+            raise ArbitrageError(error_msg, "opportunity_scan", context) from e
     
     async def _fetch_market_data_async(
         self, 
@@ -352,7 +373,15 @@ class ArbitrageEngine:
                     all_data.extend(response.data)
                     self.logger.debug(f"Fetched {len(response.data)} records from {adapter_name}")
             except Exception as e:
-                self.logger.warning(f"Failed to fetch data from {adapter_name}: {e}")
+                context = create_error_context(
+                    component="arbitrage_engine",
+                    operation="fetch_market_data",
+                    adapter_name=adapter_name,
+                    data_type="market_data"
+                )
+                error_msg = f"Failed to fetch data from {adapter_name}: {e}"
+                self.logger.warning(error_msg)
+                # 这里不重新抛出异常，因为一个适配器失败不应该阻止其他适配器
         
         # Remove duplicates based on instrument code
         unique_data = {}
@@ -387,7 +416,14 @@ class ArbitrageEngine:
             return response
             
         except Exception as e:
-            self.logger.warning(f"Adapter {adapter.name} fetch failed: {e}")
+            context = create_error_context(
+                component="arbitrage_engine",
+                operation="fetch_from_adapter",
+                adapter_name=adapter.name,
+                data_type="option_data"
+            )
+            error_msg = f"Adapter {adapter.name} fetch failed: {e}"
+            self.logger.warning(error_msg)
             return None
     
     async def _preprocess_market_data(self, market_data: List[OptionData]) -> None:
@@ -509,7 +545,15 @@ class ArbitrageEngine:
                             f"Strategy {strategy_type} failed: {result.error_message}"
                         )
             except Exception as e:
-                self.logger.error(f"Strategy {strategy_type} execution failed: {e}")
+                context = create_error_context(
+                    component="arbitrage_engine",
+                    operation="execute_strategy_parallel",
+                    strategy_type=strategy_type,
+                    data_size=len(market_data)
+                )
+                error_msg = f"Strategy {strategy_type} execution failed: {e}"
+                self.logger.error(error_msg)
+                raise ArbitrageError(error_msg, strategy_type, context) from e
         
         self.performance_metrics.strategies_executed += len(strategy_tasks)
         
@@ -566,13 +610,21 @@ class ArbitrageEngine:
             return result
             
         except Exception as e:
+            context = create_error_context(
+                component="arbitrage_engine",
+                operation="execute_single_strategy",
+                strategy_name=strategy.name,
+                data_size=len(market_data)
+            )
+            error_msg = f"Strategy {strategy.name} execution failed: {e}"
+            self.logger.error(error_msg)
             return StrategyResult(
                 strategy_name=strategy.name,
                 opportunities=[],
                 execution_time=time.time() - start_time,
                 data_timestamp=datetime.now(),
                 success=False,
-                error_message=str(e)
+                error_message=error_msg
             )
     
     def _rank_and_filter_opportunities(
@@ -693,7 +745,14 @@ class ArbitrageEngine:
             )
             
         except Exception as e:
-            self.logger.error(f"Error calculating risk metrics: {e}")
+            context = create_error_context(
+                component="arbitrage_engine",
+                operation="calculate_risk_metrics",
+                opportunity_id=opportunity.id,
+                instruments=opportunity.instruments
+            )
+            error_msg = f"Error calculating risk metrics for opportunity {opportunity.id}: {e}"
+            self.logger.error(error_msg)
             
             # Return conservative default metrics
             return RiskMetrics(
@@ -756,7 +815,15 @@ class ArbitrageEngine:
                 signals.append(signal)
                 
             except Exception as e:
-                self.logger.error(f"Error generating signal for opportunity {opp.id}: {e}")
+                context = create_error_context(
+                    component="arbitrage_engine",
+                    operation="generate_trading_signal",
+                    opportunity_id=opp.id,
+                    profit_margin=opp.profit_margin
+                )
+                error_msg = f"Error generating signal for opportunity {opp.id}: {e}"
+                self.logger.error(error_msg)
+                raise ArbitrageError(error_msg, "signal_generation", context) from e
         
         # Sort signals by expected profit descending
         signals.sort(key=lambda x: x.expected_profit, reverse=True)
@@ -812,6 +879,14 @@ class ArbitrageEngine:
                     'status': adapter.connection_info.status.value
                 }
             except Exception as e:
+                context = create_error_context(
+                    component="arbitrage_engine",
+                    operation="health_check_adapter",
+                    adapter_name=name,
+                    adapter_type=type(adapter).__name__
+                )
+                error_msg = f"Adapter {name} health check failed: {e}"
+                self.logger.warning(error_msg)
                 health_status['adapters'][name] = {
                     'healthy': False,
                     'error': str(e)
@@ -831,7 +906,15 @@ class ArbitrageEngine:
             try:
                 await adapter.disconnect()
             except Exception as e:
-                self.logger.warning(f"Error disconnecting adapter: {e}")
+                context = create_error_context(
+                    component="arbitrage_engine",
+                    operation="shutdown_adapter",
+                    adapter_name=adapter.name,
+                    adapter_type=type(adapter).__name__
+                )
+                error_msg = f"Error disconnecting adapter {adapter.name}: {e}"
+                self.logger.warning(error_msg)
+                raise SystemError(error_msg, context) from e
         
         # Clear cache
         self.cache.clear()

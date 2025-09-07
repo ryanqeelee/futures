@@ -66,10 +66,7 @@ data_sources:
     type: "wind" 
     enabled: false
     priority: 2
-  mock:
-    type: "mock"
-    enabled: false
-    priority: 10
+  # mock data source removed for production security
 
 # Strategy references (detailed configs in strategies.yaml)  
 strategies:
@@ -87,7 +84,7 @@ strategies:
     priority: 3
   calendar_spread:
     type: "calendar_spread"
-    enabled: true
+    enabled: false
     priority: 4
   legacy_integration:
     type: "pricing_arbitrage"

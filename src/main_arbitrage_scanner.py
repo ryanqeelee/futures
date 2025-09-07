@@ -33,21 +33,21 @@ import pandas as pd
 import numpy as np
 
 # Import core components
-from .config.manager import ConfigManager
-from .config.models import (
+from src.config.manager import ConfigManager
+from src.config.models import (
     ArbitrageOpportunity, StrategyType, SystemConfig,
     RiskConfig, StrategyConfig
 )
-from .engine.arbitrage_engine import (
+from src.engine.arbitrage_engine import (
     ArbitrageEngine, ScanParameters, TradingSignal,
     EnginePerformanceMetrics
 )
-from .adapters.tushare_adapter import TushareAdapter
-from .strategies.base import (
+from src.adapters.tushare_adapter import TushareAdapter
+from src.strategies.base import (
     BaseStrategy, StrategyResult, OptionData,
     RiskMetrics, TradingAction, ActionType, RiskLevel
 )
-from .utils.performance_monitor import PerformanceMonitor
+from src.utils.performance_monitor import PerformanceMonitor
 
 
 # Import enhanced pricing engine
@@ -425,7 +425,7 @@ class MainArbitrageScanner:
     async def _fetch_options_data(self, scan_config: ScanConfiguration) -> pd.DataFrame:
         """Fetch options data using TushareAdapter."""
         try:
-            from .adapters.base import DataRequest
+            from src.adapters.base import DataRequest
             
             # Create data request
             request = DataRequest(

@@ -22,7 +22,6 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 from collections import defaultdict, OrderedDict
 
-from ..adapters.base import DataRequest, DataResponse
 from ..strategies.base import OptionData
 
 

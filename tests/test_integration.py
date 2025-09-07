@@ -38,7 +38,7 @@ from main_arbitrage_scanner import (
     MainArbitrageScanner, ScanConfiguration, ScanResult,
     LegacyAlgorithmIntegrator, create_scanner, run_scan
 )
-from config.models import StrategyType, RiskLevel, ArbitrageOpportunity
+from config.models import StrategyType, ArbitrageOpportunity
 
 
 class TestMainArbitrageScanner(unittest.TestCase):

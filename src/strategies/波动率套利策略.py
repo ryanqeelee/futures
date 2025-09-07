@@ -492,14 +492,10 @@ class VolatilityArbitrageStrategy(BaseStrategy):
         if option.implied_volatility is None:
             return None
         
-        # Simple heuristic: assume HV is typically 80% of long-term average IV
-        # This is just for demonstration - replace with real HV calculation
+        # CRITICAL: This needs real historical volatility calculation
+        # For now, use a conservative estimate based on implied volatility
+        # TODO: Implement proper HV calculation using actual price history
         estimated_hv = option.implied_volatility * 0.8
-        
-        # Add some randomness to simulate real HV variations
-        import random
-        noise_factor = 1.0 + random.uniform(-0.2, 0.2)  # +/- 20% noise
-        estimated_hv *= noise_factor
         
         return max(0.01, estimated_hv)  # Minimum 1% HV
     

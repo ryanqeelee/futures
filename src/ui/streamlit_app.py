@@ -219,7 +219,10 @@ class TradingSystemUI:
     def _get_config_manager():
         """获取配置管理器（缓存版本）"""
         logging.getLogger('src.ui.streamlit_app').info("创建配置管理器（缓存版本）")
-        return ConfigManager()
+        config_manager = ConfigManager()
+        # 强制重载配置以确保获取最新的YAML文件内容
+        config_manager.load_config(reload=True)
+        return config_manager
     
     @staticmethod
     @st.cache_resource 
@@ -355,7 +358,10 @@ class TradingSystemUI:
         
         # 重新加载配置按钮
         if st.button("🔄 重新加载配置"):
+            # 清除Streamlit缓存
+            st.cache_resource.clear()
             st.session_state.config_valid = False
+            st.session_state.system_status = 'not_initialized'
             st.rerun()
     
     def _render_scan_controls(self):
@@ -365,6 +371,39 @@ class TradingSystemUI:
         if not st.session_state.config_valid:
             st.warning("请先初始化系统")
             return
+        
+        # 策略选择
+        with st.expander("🎲 策略选择", expanded=True):
+            st.write("选择要使用的套利策略：")
+            
+            # 策略选项映射
+            strategy_options = {
+                "定价套利": StrategyType.PRICING_ARBITRAGE,
+                "看跌看涨平价": StrategyType.PUT_CALL_PARITY,
+                "波动率套利": StrategyType.VOLATILITY_ARBITRAGE,
+                "日历价差": StrategyType.CALENDAR_SPREAD
+            }
+            
+            col1, col2 = st.columns(2)
+            
+            selected_strategies = []
+            with col1:
+                if st.checkbox("定价套利", value=True, help="基于Black-Scholes模型的理论价格与市场价格偏差"):
+                    selected_strategies.append(StrategyType.PRICING_ARBITRAGE)
+                if st.checkbox("看跌看涨平价", value=True, help="基于期权平价关系的套利机会"):
+                    selected_strategies.append(StrategyType.PUT_CALL_PARITY)
+            
+            with col2:
+                if st.checkbox("波动率套利", value=False, help="基于隐含波动率与历史波动率偏差"):
+                    selected_strategies.append(StrategyType.VOLATILITY_ARBITRAGE)
+                if st.checkbox("日历价差", value=False, help="不同到期日期权的价差套利"):
+                    selected_strategies.append(StrategyType.CALENDAR_SPREAD)
+            
+            # 显示已选择的策略
+            if selected_strategies:
+                st.success(f"已选择 {len(selected_strategies)} 个策略")
+            else:
+                st.warning("请至少选择一个策略")
         
         # 扫描参数
         with st.expander("📋 扫描参数", expanded=False):
@@ -393,7 +432,7 @@ class TradingSystemUI:
             )
         
         # 一键扫描按钮
-        scan_disabled = st.session_state.system_status == 'scanning'
+        scan_disabled = st.session_state.system_status == 'scanning' or not selected_strategies
         
         if st.button(
             "🚀 一键扫描套利机会", 
@@ -404,7 +443,8 @@ class TradingSystemUI:
             asyncio.run(self._run_arbitrage_scan(
                 min_profit_threshold=min_profit / 100,
                 max_risk_tolerance=max_risk / 100,
-                max_results=max_results
+                max_results=max_results,
+                strategy_types=selected_strategies
             ))
     
     def _render_system_info(self):
@@ -865,7 +905,8 @@ class TradingSystemUI:
         self,
         min_profit_threshold: float = 0.01,
         max_risk_tolerance: float = 0.1,
-        max_results: int = 100
+        max_results: int = 100,
+        strategy_types: List[StrategyType] = None
     ):
         """
         执行套利扫描
@@ -874,6 +915,7 @@ class TradingSystemUI:
             min_profit_threshold: 最小利润阈值
             max_risk_tolerance: 最大风险容忍度
             max_results: 最大结果数量
+            strategy_types: 选择的策略类型列表
         """
         # 检查系统状态
         if st.session_state.system_status != 'ready':
@@ -901,7 +943,8 @@ class TradingSystemUI:
                 max_risk_tolerance=max_risk_tolerance,
                 max_results=max_results,
                 include_greeks=True,
-                include_iv=True
+                include_iv=True,
+                strategy_types=strategy_types or []
             )
             
             # 模拟进度更新
