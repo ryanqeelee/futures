@@ -188,7 +188,7 @@ class DataVisualization:
         
         fig.update_yaxis(tickformat='.2%')
         fig.update_layout(height=500)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_strategy_pie_chart(self, df: pd.DataFrame) -> None:
         """渲染策略分布饼图"""
@@ -207,7 +207,7 @@ class DataVisualization:
         
         fig.update_traces(textinfo='percent+label+value')
         fig.update_layout(height=500)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_opportunity_timeline(self, df: pd.DataFrame) -> None:
         """渲染机会时间线"""
@@ -295,7 +295,7 @@ class DataVisualization:
             showlegend=False
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def render_time_series_analysis(self, df: pd.DataFrame) -> None:
         """渲染时间序列分析"""
@@ -394,7 +394,7 @@ class DataVisualization:
             hovermode='x unified'
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_seasonality_analysis(self, df: pd.DataFrame) -> None:
         """渲染季节性分析"""
@@ -421,7 +421,7 @@ class DataVisualization:
                 labels={'index': '小时', 'y': '机会数量'}
             )
             fig_hourly.update_layout(height=400)
-            st.plotly_chart(fig_hourly, use_container_width=True)
+            st.plotly_chart(fig_hourly, width='stretch')
         
         with col2:
             # 按星期分析
@@ -442,7 +442,7 @@ class DataVisualization:
                 labels={'index': '星期', 'y': '机会数量'}
             )
             fig_weekly.update_layout(height=400)
-            st.plotly_chart(fig_weekly, use_container_width=True)
+            st.plotly_chart(fig_weekly, width='stretch')
     
     def _render_volatility_analysis(self, df: pd.DataFrame) -> None:
         """渲染波动性分析"""
@@ -483,7 +483,7 @@ class DataVisualization:
                 title='利润率波动性分析',
                 height=400
             )
-            st.plotly_chart(fig_profit_vol, use_container_width=True)
+            st.plotly_chart(fig_profit_vol, width='stretch')
         
         with col2:
             # 风险波动性
@@ -514,7 +514,7 @@ class DataVisualization:
                 title='风险波动性分析',
                 height=400
             )
-            st.plotly_chart(fig_risk_vol, use_container_width=True)
+            st.plotly_chart(fig_risk_vol, width='stretch')
     
     def render_strategy_performance_analysis(self, df: pd.DataFrame) -> None:
         """渲染策略效果分析"""
@@ -561,7 +561,7 @@ class DataVisualization:
         # 显示统计表
         st.dataframe(
             strategy_stats,
-            use_container_width=True,
+            width='stretch',
             column_config={
                 "平均利润率": st.column_config.NumberColumn(format="%.4f"),
                 "平均风险": st.column_config.NumberColumn(format="%.4f"),
@@ -585,7 +585,7 @@ class DataVisualization:
                 color_continuous_scale='Viridis'
             )
             fig_efficiency.update_yaxis(tickformat='.2%')
-            st.plotly_chart(fig_efficiency, use_container_width=True)
+            st.plotly_chart(fig_efficiency, width='stretch')
         
         with col2:
             # 策略收益对比
@@ -599,7 +599,7 @@ class DataVisualization:
                 color_continuous_scale='Blues'
             )
             fig_returns.update_xaxis(tickformat='.2%')
-            st.plotly_chart(fig_returns, use_container_width=True)
+            st.plotly_chart(fig_returns, width='stretch')
     
     def _render_strategy_performance_matrix(self, df: pd.DataFrame) -> None:
         """渲染策略表现矩阵"""
@@ -626,7 +626,7 @@ class DataVisualization:
         )
         
         fig_matrix.update_layout(height=400)
-        st.plotly_chart(fig_matrix, use_container_width=True)
+        st.plotly_chart(fig_matrix, width='stretch')
     
     def _render_strategy_efficiency_analysis(self, df: pd.DataFrame) -> None:
         """渲染策略效率分析"""
@@ -683,7 +683,7 @@ class DataVisualization:
             height=500
         )
         
-        st.plotly_chart(fig_radar, use_container_width=True)
+        st.plotly_chart(fig_radar, width='stretch')
     
     def render_heatmap_analysis(self, df: pd.DataFrame) -> None:
         """渲染热力图分析"""
@@ -728,7 +728,7 @@ class DataVisualization:
             height=600
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_time_strategy_heatmap(self, df: pd.DataFrame) -> None:
         """渲染时间-策略热力图"""
@@ -753,7 +753,7 @@ class DataVisualization:
         )
         
         fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_risk_return_heatmap(self, df: pd.DataFrame) -> None:
         """渲染风险-收益热力图"""
@@ -778,7 +778,7 @@ class DataVisualization:
         
         fig.update_yaxis(tickformat='.2%')
         fig.update_layout(height=500)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def render_distribution_analysis(self, df: pd.DataFrame) -> None:
         """渲染分布分析"""
@@ -826,7 +826,7 @@ class DataVisualization:
             )
             fig_hist.add_vline(x=df[column].mean(), line_dash="dash", line_color="red", annotation_text="均值")
             fig_hist.add_vline(x=df[column].median(), line_dash="dash", line_color="green", annotation_text="中位数")
-            st.plotly_chart(fig_hist, use_container_width=True)
+            st.plotly_chart(fig_hist, width='stretch')
         
         with col2:
             # 按策略分布
@@ -839,7 +839,7 @@ class DataVisualization:
                     nbins=20,
                     opacity=0.7
                 )
-                st.plotly_chart(fig_hist_strategy, use_container_width=True)
+                st.plotly_chart(fig_hist_strategy, width='stretch')
     
     def _render_density_analysis(self, df: pd.DataFrame, column: str) -> None:
         """渲染概率密度分析"""
@@ -885,7 +885,7 @@ class DataVisualization:
             yaxis2=dict(overlaying='y', side='right', showgrid=False)
         )
         
-        st.plotly_chart(fig_density, use_container_width=True)
+        st.plotly_chart(fig_density, width='stretch')
     
     def _render_cumulative_distribution(self, df: pd.DataFrame, column: str) -> None:
         """渲染累积分布"""
@@ -925,7 +925,7 @@ class DataVisualization:
             yaxis_title='累积概率'
         )
         
-        st.plotly_chart(fig_cdf, use_container_width=True)
+        st.plotly_chart(fig_cdf, width='stretch')
     
     def _render_statistical_tests(self, df: pd.DataFrame, column: str) -> None:
         """渲染统计检验结果"""
@@ -1033,7 +1033,7 @@ class DataVisualization:
                     )
         
         fig.update_layout(annotations=annotations, height=500)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_correlation_network(self, corr_matrix: pd.DataFrame) -> None:
         """渲染相关性网络图"""
@@ -1104,7 +1104,7 @@ class DataVisualization:
             title='相关性强度分布',
             labels={'绝对值': '相关系数绝对值', 'count': '频数'}
         )
-        st.plotly_chart(fig_corr_dist, use_container_width=True)
+        st.plotly_chart(fig_corr_dist, width='stretch')
     
     def _render_scatter_matrix(self, df: pd.DataFrame, numeric_cols: List[str]) -> None:
         """渲染散点图矩阵"""
@@ -1133,4 +1133,4 @@ class DataVisualization:
             width=800
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')

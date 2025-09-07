@@ -437,7 +437,7 @@ class TradingSystemUI:
         if st.button(
             "🚀 一键扫描套利机会", 
             disabled=scan_disabled,
-            use_container_width=True
+            width='stretch'
         ):
             # 开始扫描
             asyncio.run(self._run_arbitrage_scan(
@@ -489,7 +489,7 @@ class TradingSystemUI:
         
         else:
             # 手动初始化按钮
-            if st.button("🚀 初始化系统", use_container_width=True):
+            if st.button("🚀 初始化系统", width='stretch'):
                 st.session_state.system_status = 'initializing'
                 st.rerun()
         
@@ -702,7 +702,7 @@ class TradingSystemUI:
                 st.write(f"显示前 {preview_rows} 行筛选结果：")
                 st.dataframe(
                     filtered_df.head(preview_rows),
-                    use_container_width=True,
+                    width='stretch',
                     hide_index=True
                 )
                 
@@ -789,7 +789,7 @@ class TradingSystemUI:
                     title='扫描历史趋势',
                     labels={'timestamp': '时间', 'opportunities_found': '发现机会数'}
                 )
-                st.plotly_chart(fig_timeline, use_container_width=True)
+                st.plotly_chart(fig_timeline, width='stretch')
                 
                 # 扫描效率分析
                 if 'scan_time' in history_df.columns:
@@ -801,7 +801,7 @@ class TradingSystemUI:
                         labels={'scan_time': '扫描时间(秒)', 'opportunities_found': '发现机会数'},
                         hover_data=['timestamp']
                     )
-                    st.plotly_chart(fig_efficiency, use_container_width=True)
+                    st.plotly_chart(fig_efficiency, width='stretch')
     
     def _render_settings_panel(self):
         """渲染设置面板"""

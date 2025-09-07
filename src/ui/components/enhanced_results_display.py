@@ -214,7 +214,7 @@ class EnhancedResultsDisplay:
             numeric_cols = df.select_dtypes(include=[np.number]).columns
             if len(numeric_cols) > 0:
                 stats_df = df[numeric_cols].describe().round(4)
-                st.dataframe(stats_df, use_container_width=True)
+                st.dataframe(stats_df, width='stretch')
         
         with col2:
             st.write("**分类型指标统计**")
@@ -225,7 +225,7 @@ class EnhancedResultsDisplay:
                     names=strategy_stats.index,
                     title="策略类型分布"
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
     
     def render_advanced_sorting_controls(self, df: pd.DataFrame) -> pd.DataFrame:
         """渲染高级排序控制"""
@@ -641,7 +641,7 @@ class EnhancedResultsDisplay:
         # 显示表格
         st.dataframe(
             display_df,
-            use_container_width=True,
+            width='stretch',
             hide_index=True,
             column_config=self._get_column_config()
         )
@@ -781,7 +781,7 @@ class EnhancedResultsDisplay:
         )
         
         fig.update_layout(height=800, title_text="期权Greeks综合分析")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def render_advanced_charts(self, df: pd.DataFrame) -> None:
         """渲染高级图表"""
@@ -849,7 +849,7 @@ class EnhancedResultsDisplay:
         )
         
         fig.update_yaxis(tickformat='.2%')
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_heatmap(self, df: pd.DataFrame):
         """渲染相关性热力图"""
@@ -871,7 +871,7 @@ class EnhancedResultsDisplay:
         )
         
         fig.update_layout(height=600)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_3d_scatter(self, df: pd.DataFrame):
         """渲染3D散点图"""
@@ -898,7 +898,7 @@ class EnhancedResultsDisplay:
         )
         
         fig.update_layout(height=700)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_radar_chart(self, df: pd.DataFrame):
         """渲染雷达图"""
@@ -943,7 +943,7 @@ class EnhancedResultsDisplay:
             title="策略表现雷达图"
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_violin_plot(self, df: pd.DataFrame):
         """渲染小提琴图"""
@@ -963,7 +963,7 @@ class EnhancedResultsDisplay:
         )
         
         fig.update_yaxis(tickformat='.2%')
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_box_plot(self, df: pd.DataFrame):
         """渲染箱线图"""
@@ -1001,4 +1001,4 @@ class EnhancedResultsDisplay:
                 title='指标分布箱线图（标准化）'
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')

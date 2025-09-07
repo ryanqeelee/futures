@@ -126,7 +126,7 @@ class ProgressMonitor:
         # 显示进度表格
         st.dataframe(
             progress_df,
-            use_container_width=True,
+            width='stretch',
             hide_index=True
         )
         
@@ -278,7 +278,7 @@ class ProgressMonitor:
             adapter_df = pd.DataFrame(adapter_data)
             st.dataframe(
                 adapter_df,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True
             )
     
@@ -346,7 +346,7 @@ class ProgressMonitor:
             title_text="系统性能趋势分析"
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _render_cache_tier_chart(self, tier_details: Dict) -> None:
         """渲染缓存层级性能图表"""
@@ -371,7 +371,7 @@ class ProgressMonitor:
         )
         
         fig.update_layout(height=300)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     def _format_time(self, seconds: float) -> str:
         """格式化时间显示"""

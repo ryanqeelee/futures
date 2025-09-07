@@ -109,7 +109,7 @@ class ResultsDisplay:
         # 显示表格
         st.dataframe(
             display_df,
-            use_container_width=True,
+            width='stretch',
             hide_index=True,
             column_config={
                 "利润率": st.column_config.ProgressColumn(
@@ -300,7 +300,7 @@ class ResultsDisplay:
                     nbins=20
                 )
                 fig_profit.update_xaxis(tickformat='.2%')
-                st.plotly_chart(fig_profit, use_container_width=True)
+                st.plotly_chart(fig_profit, width='stretch')
         
         with col2:
             # 风险评分分布
@@ -312,7 +312,7 @@ class ResultsDisplay:
                     labels={'risk_score': '风险评分', 'count': '数量'},
                     nbins=20
                 )
-                st.plotly_chart(fig_risk, use_container_width=True)
+                st.plotly_chart(fig_risk, width='stretch')
         
         # 置信度分布
         if 'confidence_score' in results_df.columns:
@@ -323,7 +323,7 @@ class ResultsDisplay:
                 labels={'confidence_score': '置信度', 'count': '数量'},
                 nbins=20
             )
-            st.plotly_chart(fig_confidence, use_container_width=True)
+            st.plotly_chart(fig_confidence, width='stretch')
     
     def _render_risk_return_chart(self, results_df: pd.DataFrame) -> None:
         """渲染风险收益分析图表"""
@@ -368,7 +368,7 @@ class ResultsDisplay:
                 annotation_text="风险中位数"
             )
         
-        st.plotly_chart(fig_scatter, use_container_width=True)
+        st.plotly_chart(fig_scatter, width='stretch')
         
         # 风险收益四象限分析
         if len(results_df) > 0:
@@ -409,7 +409,7 @@ class ResultsDisplay:
             title='风险收益四象限分布'
         )
         
-        st.plotly_chart(fig_quadrant, use_container_width=True)
+        st.plotly_chart(fig_quadrant, width='stretch')
     
     def _render_time_analysis(self, results_df: pd.DataFrame) -> None:
         """渲染时间分析图表"""
@@ -435,7 +435,7 @@ class ResultsDisplay:
                 labels={'x': '小时', 'y': '机会数量'}
             )
             
-            st.plotly_chart(fig_hourly, use_container_width=True)
+            st.plotly_chart(fig_hourly, width='stretch')
         
         with col2:
             # 时间序列
@@ -451,7 +451,7 @@ class ResultsDisplay:
                 )
                 
                 fig_timeline.update_yaxis(tickformat='.2%')
-                st.plotly_chart(fig_timeline, use_container_width=True)
+                st.plotly_chart(fig_timeline, width='stretch')
     
     def _render_strategy_comparison(self, results_df: pd.DataFrame) -> None:
         """渲染策略对比图表"""
@@ -472,7 +472,7 @@ class ResultsDisplay:
         st.write("📊 **策略表现对比**")
         st.dataframe(
             strategy_stats,
-            use_container_width=True
+            width='stretch'
         )
         
         # 可视化对比
@@ -490,7 +490,7 @@ class ResultsDisplay:
                 labels={'x': '机会数量', 'y': '策略类型'}
             )
             
-            st.plotly_chart(fig_counts, use_container_width=True)
+            st.plotly_chart(fig_counts, width='stretch')
         
         with col2:
             # 策略平均利润率对比
@@ -506,7 +506,7 @@ class ResultsDisplay:
                 )
                 
                 fig_profits.update_xaxis(tickformat='.2%')
-                st.plotly_chart(fig_profits, use_container_width=True)
+                st.plotly_chart(fig_profits, width='stretch')
     
     def render_detailed_opportunity(self, opportunity: Dict) -> None:
         """

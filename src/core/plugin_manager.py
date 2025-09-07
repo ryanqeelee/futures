@@ -240,33 +240,47 @@ class PluginManager:
     
     async def discover_and_load_plugins(self) -> Dict[str, PluginLoadResult]:
         """
-        Discover and load all available plugins.
+        Load plugins from StrategyRegistry instead of dynamic file loading.
         
         Returns:
             Dictionary mapping plugin names to load results
         """
-        self.logger.info("Starting plugin discovery and loading...")
+        self.logger.info("Loading strategies from StrategyRegistry...")
         
-        # Discover plugin files
-        plugin_files = await self._discover_plugin_files()
-        self.logger.info(f"Discovered {len(plugin_files)} potential plugin files")
+        # Get strategies from registry instead of dynamic loading
+        load_results = {}
+        strategies = StrategyRegistry.get_registered_strategies()
         
-        # Load plugins
-        if self.config.parallel_loading and self._executor:
-            load_results = await self._load_plugins_parallel(plugin_files)
-        else:
-            load_results = await self._load_plugins_sequential(plugin_files)
+        for strategy_type, strategy_class in strategies.items():
+            strategy_name = strategy_class.__name__
+            
+            # Create plugin info for each registered strategy
+            plugin_info = PluginInfo(
+                name=strategy_name,
+                strategy_type=strategy_type,
+                strategy_class=strategy_class,
+                module_path=strategy_class.__module__,
+                file_path="",  # No file path for registry-loaded strategies
+                last_modified=datetime.now(),
+                load_time=datetime.now()
+            )
+            
+            self._plugins[strategy_name] = plugin_info
+            load_results[strategy_name] = PluginLoadResult(
+                success=True,
+                error_message="",
+                load_time=0.0
+            )
         
-        # Update statistics
-        successful_loads = sum(1 for result in load_results.values() if result.success)
-        failed_loads = len(load_results) - successful_loads
+        successful_loads = len(strategies)
+        failed_loads = 0
         
-        self._load_stats['total_loads'] += len(load_results)
+        self._load_stats['total_loads'] += successful_loads
         self._load_stats['successful_loads'] += successful_loads
         self._load_stats['failed_loads'] += failed_loads
         
         self.logger.info(
-            f"Plugin loading completed: {successful_loads} successful, {failed_loads} failed"
+            f"Strategy loading completed: {successful_loads} strategies loaded from registry"
         )
         
         return load_results
@@ -554,7 +568,7 @@ class PluginManager:
     async def _setup_hot_reload(self) -> None:
         """Setup file system monitoring for hot-reload."""
         if not WATCHDOG_AVAILABLE:
-            self.logger.warning("Watchdog not available - hot-reload disabled")
+            self.logger.debug("Watchdog not available - hot-reload disabled")
             return
             
         if not self._plugin_paths:

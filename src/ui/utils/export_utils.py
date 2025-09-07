@@ -106,7 +106,7 @@ class ExportUtils:
             self._render_advanced_export_options()
         
         # 导出按钮
-        if st.button("📥 开始导出", type="primary", use_container_width=True):
+        if st.button("📥 开始导出", type="primary", width='stretch'):
             self._handle_export_request(
                 df=df,
                 export_format=export_format,
@@ -777,7 +777,7 @@ class ExportUtils:
             )
         
         # 批量导出按钮
-        if st.button("📦 开始批量导出", type="primary", use_container_width=True):
+        if st.button("📦 开始批量导出", type="primary", width='stretch'):
             if batch_format == "Excel工作簿":
                 self._export_batch_excel(datasets, selected_datasets, include_index)
             else:
@@ -917,7 +917,7 @@ class ExportUtils:
         
         # 显示模板预览
         st.write("**模板预览:**")
-        st.dataframe(template_df, use_container_width=True)
+        st.dataframe(template_df, width='stretch')
         
         # 模板说明
         with st.expander("📖 字段说明", expanded=False):
